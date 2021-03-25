@@ -21,7 +21,7 @@ esquisserServer <- function(input,
                             session,
                             data = NULL,
                             dataModule = c("GlobalEnv", "ImportFile"),
-                            sizeDataModule = "m") {
+                            sizeDataModule = "m", launchOnStart=TRUE) {
 
   ggplotCall <- reactiveValues(code = "")
 
@@ -35,7 +35,7 @@ esquisserServer <- function(input,
     id = "choose-data",
     data = isolate(data$data),
     name = isolate(data$name),
-    launchOnStart = is.null(isolate(data$data)),
+    launchOnStart = is.null(isolate(data$data)) & launchOnStart,
     coerceVars = getOption(x = "esquisse.coerceVars", default = FALSE),
     dataModule = dataModule, size = sizeDataModule
   )
