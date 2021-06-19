@@ -149,7 +149,8 @@ controls_ui <- function(id,
 }
 
 
-
+#' @noRd
+FACTORS <- c("mins" = 60, "hours" = 3600, "days" = 3600 * 24)
 
 #' Dropup buttons to hide chart's controls
 #'
@@ -165,6 +166,7 @@ controls_ui <- function(id,
 #'  to use transformation on x-axis.
 #' @param use_transY \code{reactive} function returning \code{TRUE} / \code{FALSE}
 #'  to use transformation on y-axis.
+#'  @param t_units NA by default, alternatively pass one of mins days hours. It has the effect of modifying the time unit displayed in the module's UI
 #'
 #' @return A reactiveValues with all input's values
 #' @noRd
@@ -183,7 +185,8 @@ controls_server <- function(id,
                             aesthetics = reactive(NULL),
                             use_facet = reactive(FALSE),
                             use_transX = reactive(FALSE),
-                            use_transY = reactive(FALSE)) {
+                            use_transY = reactive(FALSE),
+                            t_units = c(NA)) {
 
   callModule(
     id = id, 
@@ -290,15 +293,27 @@ controls_server <- function(id,
         }
       })
       
+      data_table_t_units <- reactive({
+        req(data_table())
+        d <- data_table()
+        if (!is.null(t_units) & "t" %in% colnames(d)) {
+          colname <- paste0("t (", t_units, ")")
+          d[[colname]] <- d$t / FACTORS[t_units]
+          # I cant remove t because this is propagated to the plotting module
+          # it's ok, we can keep it and tell the users it also filters time, but using seconds
+          # d$t <- NULL
+        }
+        d
+      })
       output_filter <- filter_data_server(
         id = "filter-data",
         data = reactive({
-          req(data_table())
-          req(names(data_table()))
+          req(data_table_t_units())
+          req(names(data_table_t_units()))
           if (isTRUE(input$disable_filters)) {
             return(NULL)
           } else {
-            data_table()
+            data_table_t_units()
           }
         }),
         name = data_name
@@ -311,6 +326,7 @@ controls_server <- function(id,
       )
       
       observeEvent(data_table(), {
+        # the output can stay the same, even if t_units is modified
         outputs$data <- data_table()
         outputs$code <- reactiveValues(expr = NULL, dplyr = NULL)
       })

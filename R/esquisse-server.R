@@ -6,6 +6,7 @@
 #' @param import_from From where to import data, argument passed
 #'  to \code{\link[datamods:import-modal]{datamods::import_ui}}.
 #' @param data_modal logical, if FALSE, the data modal UI is never shown, if TRUE it's shown if data_rv$data is NULL at initialization
+#' @param ... Additional arguments to controls_server
 #'
 #' @export
 #'
@@ -22,7 +23,8 @@ esquisse_server <- function(id,
                             data_rv = NULL,
                             default_aes = c("fill", "color", "size", "group", "facet"),
                             import_from = c("env", "file", "copypaste", "googlesheets"),
-                            data_modal = TRUE
+                            data_modal = TRUE,
+                            ...
                             ) {
   
   moduleServer(
@@ -230,7 +232,8 @@ esquisse_server <- function(id,
             x = col_type(data_chart$data[[input$dragvars$target$yvar]]),
             y = "continuous"
           )
-        })
+        }),
+        ...
       )
       
       
