@@ -14,121 +14,54 @@
 #'  renderPlot stopApp plotOutput showNotification isolate reactiveValuesToList
 #' @importFrom ggplot2 ggplot_build ggsave
 #' @import ggplot2
-#' @importFrom datamods import_modal import_server
+#' @importFrom rlang expr_deparse
 #'
 esquisserServer <- function(input,
                             output,
                             session,
                             data = NULL,
                             dataModule = c("GlobalEnv", "ImportFile"),
-                            sizeDataModule = "m") {
-  .Deprecated(new = "esquisse_server", package = "esquisse", old = "esquisserServer")
-  ns <- session$ns
+                            sizeDataModule = "m", launchOnStart=TRUE) {
+
   ggplotCall <- reactiveValues(code = "")
-  dataChart <- reactiveValues(data = NULL, name = NULL)
-
-  # Settings modal (aesthetics choices)
-  observeEvent(input$settings, {
-    showModal(modal_settings(aesthetics = input$aesthetics))
-  })
-
-  # Generate drag-and-drop input
-  output$ui_aesthetics <- renderUI({
-    if (is.null(input$aesthetics)) {
-      aesthetics <- c("fill", "color", "size", "group", "facet")
-    } else {
-      aesthetics <- input$aesthetics
-    }
-    data <- isolate(dataChart$data)
-    if (!is.null(data)) {
-      var_choices <- setdiff(names(data), attr(data, "sf_column"))
-      dragulaInput(
-        inputId = ns("dragvars"),
-        sourceLabel = "Variables",
-        targetsLabels = c("X", "Y", aesthetics),
-        targetsIds = c("xvar", "yvar", aesthetics),
-        choiceValues = var_choices,
-        choiceNames = badgeType(
-          col_name = var_choices,
-          col_type = col_type(data[, var_choices])
-        ),
-        selected = dropNulls(isolate(input$dragvars$target)),
-        badge = FALSE,
-        width = "100%",
-        height = "70px",
-        replace = TRUE
-      )
-    } else {
-      dragulaInput(
-        inputId = ns("dragvars"),
-        sourceLabel = "Variables",
-        targetsLabels = c("X", "Y", aesthetics),
-        targetsIds = c("xvar", "yvar", aesthetics),
-        choices = "",
-        badge = FALSE,
-        width = "100%",
-        height = "70px",
-        replace = TRUE
-      )
-    }
-  })
 
   observeEvent(data$data, {
     dataChart$data <- data$data
     dataChart$name <- data$name
   }, ignoreInit = FALSE)
 
-  # Launch import modal if no data at start
-  if (is.null(isolate(data$data))) {
-    datamods::import_modal(
-      id = ns("import-data"),
-      from = c("env", "file", "copypaste"),
-      title = "Import data"
-    )
-  }
-
-  # Launch import modal if button clicked
-  observeEvent(input$launch_import_data, {
-    datamods::import_modal(
-      id = ns("import-data"),
-      from = c("env", "file", "copypaste"),
-      title = "Import data"
-    )
-  })
-
-  # DAta imported and update rv used
-  data_imported_r <- datamods::import_server("import-data", return_class = "tbl_df")
-  observeEvent(data_imported_r$data(), {
-    data <- data_imported_r$data()
-    dataChart$data <- data
-    dataChart$name <- data_imported_r$name()
-  })
-
-  # Update drag-and-drop input when data changes
+  dataChart <- callModule(
+    module = chooseDataServer,
+    id = "choose-data",
+    data = isolate(data$data),
+    name = isolate(data$name),
+    launchOnStart = is.null(isolate(data$data)) & launchOnStart,
+    coerceVars = getOption(x = "esquisse.coerceVars", default = FALSE),
+    dataModule = dataModule, size = sizeDataModule
+  )
   observeEvent(dataChart$data, {
-    data <- dataChart$data
-    if (is.null(data)) {
+    if (is.null(dataChart$data)) {
       updateDragulaInput(
         session = session,
-        inputId = "dragvars",
-        status = NULL,
+        inputId = "dragvars", 
+        status = NULL, 
         choices = character(0),
         badge = FALSE
       )
     } else {
       # special case: geom_sf
-      if (inherits(data, what = "sf")) {
+      if (inherits(dataChart$data, what = "sf")) {
         geom_possible$x <- c("sf", geom_possible$x)
       }
-      var_choices <- setdiff(names(data), attr(data, "sf_column"))
+      var_choices <- setdiff(names(dataChart$data), attr(dataChart$data, "sf_column"))
       updateDragulaInput(
         session = session,
-        inputId = "dragvars",
+        inputId = "dragvars", 
         status = NULL,
         choiceValues = var_choices,
         choiceNames = badgeType(
           col_name = var_choices,
-          col_type = col_type(data[, var_choices])
+          col_type = col_type(dataChart$data[, var_choices])
         ),
         badge = FALSE
       )
@@ -173,7 +106,8 @@ esquisserServer <- function(input,
 
   # Module chart controls : title, xlabs, colors, export...
   paramsChart <- reactiveValues(inputs = NULL)
-  paramsChart <- controls_server(
+  paramsChart <- callModule(
+    module = chartControlsServer,
     id = "controls",
     type = geom_controls,
     data_table = reactive(dataChart$data),
@@ -183,7 +117,8 @@ esquisserServer <- function(input,
     }),
     ggplot_rv = ggplotCall,
     aesthetics = reactive({
-      dropNullsOrEmpty(input$dragvars$target)
+      vars <- dropNullsOrEmpty(input$dragvars$target)
+      names(vars)
     }),
     use_facet = reactive({
       !is.null(input$dragvars$target$facet) | !is.null(input$dragvars$target$facet_row) | !is.null(input$dragvars$target$facet_col)
@@ -234,9 +169,8 @@ esquisserServer <- function(input,
 
     scales <- which_pal_scale(
       mapping = mapping,
-      palette = paramsChart$colors$colors,
-      data = data,
-      reverse = paramsChart$colors$reverse
+      palette = paramsChart$inputs$palette,
+      data = data
     )
 
     if (identical(input$geom, "auto")) {
@@ -279,9 +213,8 @@ esquisserServer <- function(input,
       ylim <- NULL
     }
 
-    data_name <- dataChart$name %||% "data"
     gg_call <- ggcall(
-      data = data_name,
+      data = dataChart$name,
       mapping = mapping,
       geom = geom,
       geom_args = geom_args,
@@ -299,12 +232,12 @@ esquisserServer <- function(input,
       ylim = ylim
     )
 
-    ggplotCall$code <- deparse2(gg_call)
+    ggplotCall$code <- expr_deparse(gg_call, width = 1e4)
     ggplotCall$call <- gg_call
 
     ggplotCall$ggobj <- safe_ggplot(
       expr = gg_call,
-      data = setNames(list(data), data_name)
+      data = setNames(list(data), dataChart$name)
     )
     ggplotCall$ggobj$plot
   })
@@ -319,7 +252,7 @@ esquisserServer <- function(input,
     output_module$code_plot <- ggplotCall$code
   }, ignoreInit = TRUE)
   observeEvent(paramsChart$data, {
-    output_module$code_filters <- paramsChart$code
+    output_module$code_filters <- reactiveValuesToList(paramsChart$code)
     output_module$data <- paramsChart$data
   }, ignoreInit = TRUE)
 
