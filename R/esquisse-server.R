@@ -347,6 +347,8 @@ esquisse_server <- function(id,
           ylim = ylim
         )
         
+        gg_call <- extend_gg_call(gg_call, ...)
+ 
         ggplotCall$code <- deparse2(gg_call)
         ggplotCall$call <- gg_call
 

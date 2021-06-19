@@ -33,7 +33,7 @@ safe_ggplot <- function(expr, data = NULL, session = shiny::getDefaultReactiveDo
   withCallingHandlers(
     expr = tryCatch(
       expr = {
-        gg <- eval_tidy(expr = expr, data = data)
+        gg <- eval_tidy(expr = expr, data = data, env = parent.frame())
         gg <- ggplot_build(gg)
         gg
       },
