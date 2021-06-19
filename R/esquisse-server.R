@@ -131,7 +131,7 @@ esquisse_server <- function(id,
       })
       
       # Update drag-and-drop input when data changes
-      observeEvent(data_chart$data, {
+      observeEvent(data_chart$name, {
         data <- data_chart$data
         # but only if last_data is NULL
         req(is.null(globals$last_data))
