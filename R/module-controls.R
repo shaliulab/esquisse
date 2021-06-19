@@ -283,7 +283,7 @@ controls_server <- function(id,
         toggleDisplay(id = ns("controls-histogram"), display = type$x %in% "histogram")
         toggleDisplay(id = ns("controls-density"), display = type$x %in% c("density", "violin"))
         toggleDisplay(id = ns("controls-scatter"), display = type$x %in% "point")
-        toggleDisplay(id = ns("controls-size"), display = type$x %in% c("point", "line", "step", "sf"))
+        toggleDisplay(id = ns("controls-size"), display = type$x %in% c("point", "line", "step", "sf", "pop_etho"))
         toggleDisplay(id = ns("controls-violin"), display = type$x %in% "violin")
         
         if (type$x %in% c("point")) {

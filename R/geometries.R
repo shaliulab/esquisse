@@ -170,12 +170,14 @@ match_geom_args <- function(geom, args, add_aes = TRUE, mapping = list(), envir 
     if (geom %in% c("bar", "histogram", "boxplot", "violin", "density")) {
       args$fill <- args$fill_color %||% "#0C4C8A"
     }
-    if (geom %in% c("line", "step", "point")) {
+    if (geom %in% c("line", "step", "point", "pop_etho")) {
       args$colour <- args$fill_color %||% "#0C4C8A"
     }
   }
   if (geom %in% c("bar", "histogram", "boxplot", "violin", "density")) {
     args$size <- NULL
+  } else if(geom %in% c("pop_etho")) {
+    args$size <- args$size %||% 1
   }
   if (identical(args$position, "stack")) {
     args$position <- NULL
