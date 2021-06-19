@@ -31,7 +31,7 @@ esquisse_server <- function(id,
     id = id,
     module = function(input, output, session) {
       ns <- session$ns
-      last_data <- NULL
+      globals <- reactiveValues(last_data = NULL, pop_etho_init = F)
       ggplotCall <- reactiveValues(code = "")
       data_chart <- reactiveValues(data = NULL, name = NULL)
       
@@ -134,8 +134,8 @@ esquisse_server <- function(id,
       observeEvent(data_chart$data, {
         data <- data_chart$data
         # but only if last_data is NULL
-        req(is.null(last_data))
-        last_data <<- data
+        req(is.null(globals$last_data))
+        globalslast_data <- data
         if (is.null(data)) {
           updateDragulaInput(
             session = session,
@@ -274,6 +274,16 @@ esquisse_server <- function(id,
           geom <- input$geom
         }
         
+        observeEvent(input$geom, {
+          if(input$geom == "pop_etho" & !globals$pop_etho_init) {
+            # TODO
+            # this works at the server side, but the UI stays showing the checkbox as false
+            # the user can then activate it (with no effect) and disable it to reset it to normal
+            controls_rv$ld_annotations$add <- T
+            globals$pop_etho_init <- T
+          }
+        })
+        
         geom_args <- match_geom_args(input$geom, controls_rv$inputs, mapping = mapping)
         
         if(isTRUE(controls_rv$ld_annotations$add)) {
@@ -364,13 +374,15 @@ esquisse_server <- function(id,
       observeEvent(input$close, shiny::stopApp())
       
       # Ouput of module (if used in Shiny)
-      output_module <- reactiveValues(code_plot = NULL, code_filters = NULL, data = NULL)
+      output_module <- reactiveValues(code_plot = NULL, code_filters = NULL, data = NULL, time = NULL)
       observeEvent(ggplotCall$code, {
         output_module$code_plot <- ggplotCall$code
+        output_module$time <- Sys.time()
       }, ignoreInit = TRUE)
       observeEvent(controls_rv$data, {
         output_module$code_filters <- controls_rv$code
         output_module$data <- controls_rv$data
+        output_module$time <- Sys.time()
       }, ignoreInit = TRUE)
       
       return(output_module)
