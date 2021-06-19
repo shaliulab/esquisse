@@ -275,6 +275,7 @@ controls_server <- function(id,
       })
       
       observeEvent(type$x, {
+        toggleDisplay(id = ns("controls-ld_annotations"), display = type$x %in% c("auto", "pop_etho", "point", "line")) # remove auto when you figure out why selecting pop_etho translates into type$x being auto
         toggleDisplay(id = ns("controls-position"), display = type$x %in% c("bar", "line", "area"))
         toggleDisplay(id = ns("controls-histogram"), display = type$x %in% "histogram")
         toggleDisplay(id = ns("controls-density"), display = type$x %in% c("density", "violin"))
@@ -430,6 +431,19 @@ controls_server <- function(id,
           add = input$smooth_add,
           args = list(
             span = input$smooth_span
+          )
+        )
+      })
+      
+      # ld_annotations input
+      observe({
+        outputs$ld_annotations <- list(
+          add = input$ld_annotations_add,
+          args = list(
+            color = ifelse(input$ld_annotations_color, T, NA),
+            height = input$ld_annotations_height,
+            alpha = input$ld_annotations_alpha
+            # Potentially add all options
           )
         )
       })
@@ -772,6 +786,53 @@ controls_params <- function(ns) {
 
   tagList(
     tags$div(
+      id = ns("controls-ld_annotations"),
+      style = "display: none; padding-top: 10px;",
+      tags$label(
+        class = "control-label",
+        `for` = ns("ld_annotations_add"),
+        "Add LD annotation:"
+      ),
+      prettyToggle(
+        inputId = ns("ld_annotations_add"),
+        label_on = "Yes",
+        icon_on = icon("check"),
+        status_on = "success",
+        status_off = "danger",
+        label_off = "No",
+        icon_off = icon("remove"),
+        inline = TRUE
+      ),
+      conditionalPanel(
+        condition = paste0("input.ld_annotations_add==true"),
+        ns = ns,
+        sliderInput(
+          inputId = ns("ld_annotations_alpha"),
+          label = "LD annotation alpha:",
+          min = 0, 
+          max = 1,
+          value = 0.8, 
+          step = 0.1,
+          width = "100%"
+        ),
+        checkboxInput(
+          inputId = ns("ld_annotations_color"),
+          label = "LD annotation color:",
+          value = F,
+          width = "100%"
+        ),
+        sliderInput(
+          inputId = ns("ld_annotations_height"),
+          label = "LD annotation height:",
+          min = 0, 
+          max = 1,
+          value = 1, 
+          step = 0.1,
+          width = "100%"
+        ),
+      )
+    ),
+    tags$div(
       id = ns("controls-scatter"),
       style = "display: none; padding-top: 10px;",
       tags$label(
@@ -801,7 +862,7 @@ controls_params <- function(ns) {
           step = 0.01,
           width = "100%"
         )
-      ),
+      )
     ),
     tags$div(
       id = ns("controls-size"), style = "display: none;",

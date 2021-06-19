@@ -1,7 +1,7 @@
 #' List with all geom functions not provided in ggplot2
 #' but instead by ggetho (a ggplot2 extension)
 #' @noRd
-GGETHO_GEOMETRIES <- c("geom_pop_etho")
+GGETHO_GEOMETRIES <- c("geom_pop_etho", "geom_ld_annotations")
 
 #' Potential geometries according to the data
 #'
@@ -91,6 +91,7 @@ potential_geoms <- function(data, mapping, auto = FALSE) {
 #' @importFrom ggplot2 geom_histogram geom_density geom_bar geom_sf 
 #' geom_boxplot geom_bar geom_point geom_line geom_tile geom_violin
 #' geom_area geom_smooth geom_col
+#' @importFrom ggetho geom_pop_etho geom_ld_annotations
 potential_geoms_ref <- function() {
   x <- matrix(
     data = c(
@@ -143,7 +144,6 @@ potential_geoms_ref <- function() {
 #' @param add_aes Add aesthetics parameters (like size, fill, ...).
 #' @param mapping Mapping used in plot, to avoid setting fixed aesthetics parameters.
 #' @param envir Package environment to search in.
-#' @importFrom ggetho geom_pop_etho
 #'
 #' @return a \code{list}
 #' @export

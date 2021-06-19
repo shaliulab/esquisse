@@ -5,6 +5,7 @@
 #'  vector or `reactive` function returning one.
 #' @param import_from From where to import data, argument passed
 #'  to \code{\link[datamods:import-modal]{datamods::import_ui}}.
+#' @param data_modal logical, if FALSE, the data modal UI is never shown, if TRUE it's shown if data_rv$data is NULL at initialization
 #'
 #' @export
 #'
@@ -187,7 +188,7 @@ esquisse_server <- function(id,
         geoms <- c(
           "auto", "line", "area", "bar", "histogram",
           "point", "boxplot", "violin", "density",
-          "tile", "sf"
+          "tile", "sf", "pop_etho"
         )
         updateDropInput(
           session = session,
@@ -272,6 +273,13 @@ esquisse_server <- function(id,
         
         geom_args <- match_geom_args(input$geom, controls_rv$inputs, mapping = mapping)
         
+        if(isTRUE(controls_rv$ld_annotations$add)) {
+          geom <- c(geom, "ld_annotations")
+          geom_args <- c(
+            setNames(list(geom_args), input$geom),
+            list(ld_annotations = controls_rv$ld_annotations$args)
+          )
+        }
         if (isTRUE(controls_rv$smooth$add) & input$geom %in% c("point", "line")) {
           geom <- c(geom, "smooth")
           geom_args <- c(

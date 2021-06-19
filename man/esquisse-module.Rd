@@ -19,7 +19,8 @@ esquisse_server(
   id,
   data_rv = NULL,
   default_aes = c("fill", "color", "size", "group", "facet"),
-  import_from = c("env", "file", "copypaste", "googlesheets")
+  import_from = c("env", "file", "copypaste", "googlesheets"),
+  data_modal = TRUE
 )
 
 esquisseContainer(width = "100\%", height = "700px", fixed = FALSE)
@@ -47,6 +48,8 @@ vector or \code{reactive} function returning one.}
 
 \item{import_from}{From where to import data, argument passed
 to \code{\link[datamods:import-modal]{datamods::import_ui}}.}
+
+\item{data_modal}{logical, if FALSE, the data modal UI is never shown, if TRUE it's shown if data_rv$data is NULL at initialization}
 
 \item{width, height}{The width and height of the container, e.g. \code{"400px"},
 or \code{"100\%"}; see \code{\link[htmltools]{validateCssUnit}}.}
