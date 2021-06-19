@@ -8,7 +8,8 @@ Authors@R: c(person("Fanny", "Meyer", role = c("aut")),
   person("Xiangnan", "Dang", comment = "Facets rows and cols, X/Y limits", role = "ctb"),
   person("Nicolas", "Bevacqua", role = "cph", comment = "author of dragula JavaScript library"),
   person("Daybrush (Younkue Choi)", role = "cph", comment = "author of moveable JavaScript library"),
-  person("Zeno", "Rocha", role = "cph", comment = "author of clipboard JavaScript library"))
+  person("Zeno", "Rocha", role = "cph", comment = "author of clipboard JavaScript library"),
+  person("Antonio", "Ortega", role = "cph", comment = "author of support for ggetho plots", email = "antonio.ortega@kuleuven.be"))
 Description: A 'shiny' gadget to create 'ggplot2' figures interactively with drag-and-drop to map your variables to different aesthetics.
     You can quickly visualize your data accordingly to their type, export in various formats,
     and retrieve the code to reproduce the plot.
@@ -39,3 +40,5 @@ Suggests:
     ggthemes,
     hrbrthemes
 VignetteBuilder: knitr
+Remotes:
+    shaliulab/ggetho
