@@ -827,7 +827,7 @@ controls_params <- function(ns) {
           label = "LD annotation alpha:",
           min = 0, 
           max = 1,
-          value = 0.8, 
+          value = 0.2, 
           step = 0.1,
           width = "100%"
         ),
