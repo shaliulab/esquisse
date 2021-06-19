@@ -20,12 +20,15 @@
 esquisse_server <- function(id, 
                             data_rv = NULL,
                             default_aes = c("fill", "color", "size", "group", "facet"),
-                            import_from = c("env", "file", "copypaste", "googlesheets")) {
+                            import_from = c("env", "file", "copypaste", "googlesheets"),
+                            data_modal = TRUE
+                            ) {
   
   moduleServer(
     id = id,
     module = function(input, output, session) {
       ns <- session$ns
+      last_data <- NULL
       ggplotCall <- reactiveValues(code = "")
       data_chart <- reactiveValues(data = NULL, name = NULL)
       
@@ -85,7 +88,7 @@ esquisse_server <- function(id,
       }, ignoreInit = FALSE)
       
       # Launch import modal if no data at start
-      if (is.null(isolate(data_rv$data))) {
+      if (is.null(isolate(data_rv$data)) & data_modal) {
         datamods::import_modal(
           id = ns("import-data"),
           from = import_from,
@@ -127,6 +130,9 @@ esquisse_server <- function(id,
       # Update drag-and-drop input when data changes
       observeEvent(data_chart$data, {
         data <- data_chart$data
+        # but only if last_data is NULL
+        req(is.null(last_data))
+        last_data <<- data
         if (is.null(data)) {
           updateDragulaInput(
             session = session,
