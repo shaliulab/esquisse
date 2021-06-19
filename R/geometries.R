@@ -1,3 +1,7 @@
+#' List with all geom functions not provided in ggplot2
+#' but instead by ggetho (a ggplot2 extension)
+#' @noRd
+GGETHO_GEOMETRIES <- c("geom_pop_etho")
 
 #' Potential geometries according to the data
 #'
@@ -103,7 +107,8 @@ potential_geoms_ref <- function() {
       "discrete",    "continuous",  "boxplot",   "0", 
       "discrete",    "continuous",  "violin",    "0", 
       "discrete",    "continuous",  "bar",       "1",
-      "continuous",  "continuous",  "point",     "1",
+      "continuous",  "continuous",  "pop_etho",  "1",
+      "continuous",  "continuous",  "point",     "0",
       "continuous",  "continuous",  "line",      "0", 
       "continuous",  "continuous",  "step",      "0", 
       "continuous",  "continuous",  "area",      "0",
@@ -138,6 +143,7 @@ potential_geoms_ref <- function() {
 #' @param add_aes Add aesthetics parameters (like size, fill, ...).
 #' @param mapping Mapping used in plot, to avoid setting fixed aesthetics parameters.
 #' @param envir Package environment to search in.
+#' @importFrom ggetho geom_pop_etho
 #'
 #' @return a \code{list}
 #' @export
@@ -177,9 +183,16 @@ match_geom_args <- function(geom, args, add_aes = TRUE, mapping = list(), envir 
   if (!geom %in% c("bar", "histogram")) {
     args$position <- NULL
   }
+  
+ if (!grepl(pattern = "^geom_", x = geom))
+   geom <- paste0("geom_", geom)
+  
+  if (geom %in% GGETHO_GEOMETRIES) {
+     envir <- "ggetho"
+  }
+ 
   pkg_envir <- getNamespace(envir)
-  if (!grepl(pattern = "^geom_", x = geom))
-    geom <- paste0("geom_", geom)
+  
   geom_args <- try(formals(fun = get(geom, envir = pkg_envir)), silent = TRUE)
   if (inherits(geom_args, "try-error"))
     stop(paste(geom, "not found in", envir), call. = FALSE)

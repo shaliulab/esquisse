@@ -200,7 +200,7 @@ geomIcons <- function() {
   geoms <- c(
     "auto", "line", "step", "area", "bar", "histogram",
     "point", "boxplot", "violin", "density",
-    "tile", "sf"
+    "tile", "sf", "pop_etho"
   )
   href <- "esquisse/geomIcon/gg-%s.png"
   geomsChoices <- lapply(
