@@ -165,7 +165,10 @@ col_type <- function(x, no_id = FALSE) {
     x <- x[, setdiff(names(x), attr(x, "sf_column")), drop = FALSE]
   }
 
-  if (is.data.frame(x)) {
+  # it needs to also take a list so it can handle data frames with 1 row
+  # which get coerced to list here
+  # https://github.com/dreamRs/esquisse/blob/2f86db9290f463a0b7f0ff986f7c018eef2f68fd/R/esquisse-server.R#L59
+  if (is.data.frame(x) || is.list(x)) {
     return(unlist(lapply(x, col_type), use.names = FALSE))
   } else {
     if (inherits(x, c("logical", "character", "factor", "AsIs"))) {
