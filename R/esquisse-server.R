@@ -31,7 +31,7 @@ esquisse_server <- function(id,
     id = id,
     module = function(input, output, session) {
       ns <- session$ns
-      globals <- reactiveValues(last_data = NULL, pop_etho_init = F)
+      globals <- reactiveValues(last_data = NULL,  colnames = NULL, pop_etho_init = F)
       ggplotCall <- reactiveValues(code = "")
       data_chart <- reactiveValues(data = NULL, name = NULL)
       
@@ -130,12 +130,14 @@ esquisse_server <- function(id,
         }
       })
       
-      # Update drag-and-drop input when data changes
-      observeEvent(data_chart$name, {
+      # Update drag-and-drop input when data changes:
+      # either the name
+      # or the column names
+      observeEvent(c(data_chart$name, colnames(data_chart$data)), {
+        
         data <- data_chart$data
-        # but only if last_data is NULL
-        req(is.null(globals$last_data))
-        globalslast_data <- data
+        globals$colnames <- colnames(data_chart$data)
+        
         if (is.null(data)) {
           updateDragulaInput(
             session = session,
@@ -149,7 +151,10 @@ esquisse_server <- function(id,
           if (inherits(data, what = "sf")) {
             geom_possible$x <- c("sf", geom_possible$x)
           }
+          
+          
           var_choices <- get_col_names(data)
+          
           updateDragulaInput(
             session = session,
             inputId = "dragvars",
