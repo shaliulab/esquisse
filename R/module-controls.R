@@ -114,7 +114,7 @@ controls_ui <- function(id,
         dropdown_(
           filter_data_ui(id = ns("filter-data")),
           inputId = ns("controls-filters"),
-          class = "esquisse-controls-filters",
+          class = "esquisse-controls-filters scroll",
           style = "default",
           label = "Data",
           up = TRUE,

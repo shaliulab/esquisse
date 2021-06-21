@@ -235,3 +235,9 @@ div[id^="shiny-notification-esquisse"] > .shiny-notification-close {
 }
 
 
+div.scroll {
+  height: 600px;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
