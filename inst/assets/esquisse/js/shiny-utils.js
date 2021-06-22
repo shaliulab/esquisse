@@ -5,6 +5,67 @@
 */
 /*global Shiny */
 
+
+function filter_namespace(arr, ns) {
+  // keep only stuff with an id
+  arr = arr.filter(t => t.id != undefined);
+  // keep only stuff with matching id
+  arr = arr.filter(t => t.id.indexOf('sleepPlot-') > -1);   
+  return arr;
+}
+
+function filter_namespace_spans(arr, ns) {
+  // keep only stuff with an id
+  
+  let arrLen = arr.length;
+  keep = []
+  
+  for (let i = 0; i < arrLen; i++) {
+    el = arr[i];
+    children = el.children;
+    
+    if (children != undefined) {
+      if (children[0] != undefined) {
+        if(children[0].id.indexOf(ns) > -1) {
+          keep.push(el);
+        }
+      }
+    }
+  }
+  return keep;
+}
+
+// move badge 17 to target 1
+// document.getElementById(targets[1].id).appendChild(badges[17]);
+
+aesthetics = ["xvar", "yvar", "fill", "color", "size", "group", "facet"];
+// aesthetics.findIndex(function(e) {return e == "fill";}) // returns 2
+
+function select_target(targets, aes) {
+  index = aesthetics.findIndex(function(e) {return e == aes});
+  index = index + ''; // make it to a str
+  return targets[index];
+}
+
+function select_badge(badges, var_name) {
+  return badges.filter(b => b.children[0].attributes["data-value"].value == var_name)[0];
+}
+
+
+function clone_badge(badges, var_name) {
+  badge = select_badge(badges, var_name);
+  cln = badge.cloneNode(true);
+  return cln
+}
+
+// move badge asleep to target yvar
+// cln = clone_badge("asleep");
+// document.getElementById(select_target("yvar").id).appendChild(cln);
+
+// Update the Shiny state from JS
+// Shiny.setInputValue("sleepPlot-esquisse-dragvars", {"target": {"xvar": "t", "yvar": "asleep"}});
+// Shiny.setInputValue("sleepPlot-esquisse-geom", "pop_etho");
+
 $(function() {
   // enable/disable an input
   Shiny.addCustomMessageHandler("toggleInput", function(data) {
@@ -12,6 +73,47 @@ $(function() {
     if ($("#" + data.id).hasClass("selectpicker")) {
       $("#" + data.id).selectpicker("refresh");
     }
+  });
+  
+  Shiny.addCustomMessageHandler("toggleDragula", function(data) {
+    
+    console.log("toggleDragula");
+    
+    // Select all HTML elements that make a target in the dragula input
+    // This may include instances from different modules
+    // This may include weird elements at the end like document. They dont have id
+    targets=Object.values($("div.box-dad.xyvar.dragula-target"));
+    targets = filter_namespace(targets, data.namespace);
+    
+    // Select all badges
+    badges = Object.values($("div.container-drag-source > div > div.dragula-block"));
+    badges = filter_namespace_spans(badges, data.namespace);
+  
+    for (let key in data.mapping) {
+      
+      value = data.mapping[key];
+      cln = clone_badge(badges, value);
+      
+      el = document.getElementById(select_target(targets, key).id);
+      if (el.children.length > 0) {el.removeChild(el.children[0]);}
+      el.appendChild(cln);
+    }
+    
+    Shiny.setInputValue(data.namespace+"esquisse-dragvars", {"target": data.mapping});
+    Shiny.setInputValue(data.namespace+"esquisse-geom", data.geom);
+    
+      // move badge asleep to target yvar
+      
+      // cln = clone_badge("asleep");
+      // document.getElementById(select_target("yvar").id).appendChild(cln);
+      
+      // Update the Shiny state from JS
+      // Shiny.setInputValue("sleepPlot-esquisse-dragvars", {"target": {"xvar": "t", "yvar": "asleep"}});
+      // Shiny.setInputValue("sleepPlot-esquisse-geom", "pop_etho");
+      
+      // Call this in R to update dragula!
+      // aesquisse::toggleDragula(namespace = "sleepPlot-", mapping = list("xvar" = "t", "yvar" = "asleep"), geom = "point")
+      
   });
 
   // hide or show an element

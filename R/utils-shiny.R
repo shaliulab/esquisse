@@ -92,6 +92,17 @@ toggleBtn <- function(inputId, type = "disable",
   )
 }
 
+#' Control dragula Input state from shiny
+#' @export
+#' @noRd
+toggleDragula <- function(namespace, mapping, geom = "pop_etho", session = shiny::getDefaultReactiveDomain()) {
+  
+  session$sendCustomMessage(
+    type = "toggleDragula",
+    message = list(namespace = namespace, geom=geom, mapping=mapping)
+  )
+}
+  
 
 
 #' Tag to display code
@@ -131,3 +142,8 @@ resize <- function(id,
     height = height
   ))
 }
+
+
+
+
+
