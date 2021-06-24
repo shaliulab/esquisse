@@ -55,7 +55,7 @@ function select_badge(badges, var_name) {
 function clone_badge(badges, var_name) {
   badge = select_badge(badges, var_name);
   cln = badge.cloneNode(true);
-  return cln
+  return cln;
 }
 
 // move badge asleep to target yvar
@@ -77,8 +77,6 @@ $(function() {
   
   Shiny.addCustomMessageHandler("toggleDragula", function(data) {
     
-    console.log("toggleDragula");
-    
     // Select all HTML elements that make a target in the dragula input
     // This may include instances from different modules
     // This may include weird elements at the end like document. They dont have id
@@ -92,6 +90,12 @@ $(function() {
     for (let key in data.mapping) {
       
       value = data.mapping[key];
+      
+      // cant clone if I dont know what badge it is
+      // in that case I cant clone and I dont need to anyway
+      if (value === null) {
+        continue;
+      }
       cln = clone_badge(badges, value);
       
       el = document.getElementById(select_target(targets, key).id);
@@ -99,22 +103,43 @@ $(function() {
       el.appendChild(cln);
     }
     
-    Shiny.setInputValue(data.namespace+"esquisse-dragvars", {"target": data.mapping});
-    Shiny.setInputValue(data.namespace+"esquisse-geom", data.geom);
-    
       // move badge asleep to target yvar
       
       // cln = clone_badge("asleep");
       // document.getElementById(select_target("yvar").id).appendChild(cln);
       
       // Update the Shiny state from JS
-      // Shiny.setInputValue("sleepPlot-esquisse-dragvars", {"target": {"xvar": "t", "yvar": "asleep"}});
+      // Shiny.setInputValue("sleepPlot-esquisse-dragvars", {target: {xvar: "t", yvar: "asleep"}});
       // Shiny.setInputValue("sleepPlot-esquisse-geom", "pop_etho");
       
       // Call this in R to update dragula!
-      // aesquisse::toggleDragula(namespace = "sleepPlot-", mapping = list("xvar" = "t", "yvar" = "asleep"), geom = "point")
+      // aesquisse::toggleDragula(namespace = "sleepPlot-esquisse", mapping = list("xvar" = "t", "yvar" = "asleep"), geom = "point")
+      
       
   });
+  
+  Shiny.addCustomMessageHandler("updateShiny", function(data) {
+    
+    // Select all HTML elements that make a target in the dragula input
+    // This may include instances from different modules
+    // This may include weird elements at the end like document. They dont have id
+    targets=Object.values($("div.box-dad.xyvar.dragula-target"));
+    targets = filter_namespace(targets, data.namespace);
+    
+    // Select all badges
+    badges = Object.values($("div.container-drag-source > div > div.dragula-block"));
+    badges = filter_namespace_spans(badges, data.namespace);
+  
+    // console.log("Shiny.setInputValue");
+    inputId = data.namespace+"dragvars";
+    // console.log(inputId);
+    Shiny.setInputValue(inputId, {"target": data.mapping});
+    inputId = data.namespace+"geom";
+    // console.log(inputId);
+    Shiny.setInputValue(inputId, data.geom);
+  })
+    
+    
 
   // hide or show an element
   Shiny.addCustomMessageHandler("toggleDisplay", function(data) {

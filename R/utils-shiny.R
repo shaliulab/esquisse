@@ -102,7 +102,14 @@ toggleDragula <- function(namespace, mapping, geom = "pop_etho", session = shiny
     message = list(namespace = namespace, geom=geom, mapping=mapping)
   )
 }
-  
+
+updateShiny <- function(namespace, mapping, geom = "pop_etho", session = shiny::getDefaultReactiveDomain()) {
+
+  session$sendCustomMessage(
+    type = "updateShiny",
+    message = list(namespace = namespace, geom=geom, mapping=mapping)
+  )
+}  
 
 
 #' Tag to display code

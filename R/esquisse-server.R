@@ -1,4 +1,34 @@
-
+updateDragulaInputData <- function(data, geom_possible, session) {
+  if (is.null(data)) {
+    updateDragulaInput(
+      session = session,
+      inputId = "dragvars",
+      status = NULL,
+      choices = character(0),
+      badge = FALSE
+    )
+  } else {
+    # special case: geom_sf
+    if (inherits(data, what = "sf")) {
+      geom_possible$x <- c("sf", geom_possible$x)
+    }
+    
+    var_choices <- get_col_names(data)
+    
+    updateDragulaInput(
+      session = session,
+      inputId = "dragvars",
+      status = NULL,
+      choiceValues = var_choices,
+      choiceNames = badgeType(
+        col_name = var_choices,
+        col_type = col_type(data[, var_choices, drop = TRUE])
+      ),
+      badge = FALSE
+    )
+  }
+  
+}
 #' @param data_rv A `reactiveValues` with at least a slot `data` containing a `data.frame`
 #'  to use in the module. And a slot `name` corresponding to the name of the `data.frame`.
 #' @param default_aes Default aesthetics to be used, can be a `character`
@@ -31,7 +61,7 @@ esquisse_server <- function(id,
     id = id,
     module = function(input, output, session) {
       ns <- session$ns
-      globals <- reactiveValues(last_data = NULL,  colnames = NULL, pop_etho_init = F)
+      globals <- reactiveValues(last_data = NULL, old_colnames = NULL, new_colnames = NULL, pop_etho_init = F, mapping = NULL, geom = NULL)
       ggplotCall <- reactiveValues(code = "")
       data_chart <- reactiveValues(data = NULL, name = NULL)
       
@@ -132,42 +162,16 @@ esquisse_server <- function(id,
       
       # Update drag-and-drop input when data changes:
       # either the name
-      # or the column names
+      # or the column names (because we need to show the updated list of column names)
+      # in that case though I would like the selected mappings to stay
       observeEvent(c(data_chart$name, colnames(data_chart$data)), {
-        
         data <- data_chart$data
-        globals$colnames <- colnames(data_chart$data)
-        
-        if (is.null(data)) {
-          updateDragulaInput(
-            session = session,
-            inputId = "dragvars",
-            status = NULL,
-            choices = character(0),
-            badge = FALSE
-          )
-        } else {
-          # special case: geom_sf
-          if (inherits(data, what = "sf")) {
-            geom_possible$x <- c("sf", geom_possible$x)
-          }
-          
-          
-          var_choices <- get_col_names(data)
-          
-          updateDragulaInput(
-            session = session,
-            inputId = "dragvars",
-            status = NULL,
-            choiceValues = var_choices,
-            choiceNames = badgeType(
-              col_name = var_choices,
-              col_type = col_type(data[, var_choices, drop = TRUE])
-            ),
-            badge = FALSE
-          )
-        }
-      }, ignoreNULL = FALSE)
+        globals$old_colnames <<- globals$new_colnames
+        globals$new_colnames <<- sort(colnames(data_chart$data))
+        globals$mapping <<- input$dragvars$target
+        globals$geom <<- input$dragvars$geom
+        updateDragulaInputData(data, geom_possible, session)
+      }, ignoreNULL= FALSE)
       
       geom_possible <- reactiveValues(x = "auto")
       geom_controls <- reactiveValues(x = "auto")
@@ -204,6 +208,31 @@ esquisse_server <- function(id,
           disabled = setdiff(geoms, geom_possible$x)
         )
       })
+      
+      observeEvent(input$dragvars$target, {
+        
+        if(all(sapply(input$dragvars$target, is.null))) {
+        
+          # colnames_updated <- ! (all(globals$new_colnames %in% globals$old_colnames) & all(globals$old_colnames %in% globals$new_colnames))
+          colnames_updated <- TRUE 
+          
+          # if (colnames_updated & !is.null(globals$old_colnames) & all(unlist(globals$mapping) %in% colnames(data$data_chart))) {
+          if (! all(is.null(unlist(globals$mapping))) & all(unlist(globals$mapping) %in% colnames(data_chart$data))) {
+            
+            toggleDragula(
+              namespace = session$ns(""),
+              mapping = globals$mapping,
+              geom = globals$geom
+            )
+            updateShiny(
+              namespace = session$ns(""),
+              mapping = globals$mapping,
+              geom = globals$geom
+            )
+          }
+        }
+      }, ignoreNULL = FALSE, priority = -1)
+      
       
       # Module chart controls : title, xlabs, colors, export...
       # paramsChart <- reactiveValues(inputs = NULL)
