@@ -1,8 +1,15 @@
+
+# esquisse 1.0.1.9300
+
+* Integrate ggetho geoms
+* Provide ld_annotation options
+* Persistent dragulaInput after data reload, or production of new colnames
+* Default theme switches to `theme_bw` instead of `theme_minimal`
+
+
 # esquisse 1.0.2
 
 * Use named character vector for scale manual instead of list.
-
-
 
 # esquisse 1.0.1
 
