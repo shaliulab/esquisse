@@ -168,7 +168,7 @@ T_COLUMNS <- c("t", "period")
 #'  to use transformation on x-axis.
 #' @param use_transY \code{reactive} function returning \code{TRUE} / \code{FALSE}
 #'  to use transformation on y-axis.
-#'  @param t_unit NA by default, alternatively pass one of days hours. It has the effect of modifying the time unit displayed in the module's UI
+#'  @param x_unit NA by default, alternatively pass one of days hours. It has the effect of modifying the time unit displayed in the module's UI
 #'
 #' @return A reactiveValues with all input's values
 #' @noRd
@@ -188,7 +188,7 @@ controls_server <- function(id,
                             use_facet = reactive(FALSE),
                             use_transX = reactive(FALSE),
                             use_transY = reactive(FALSE),
-                            t_unit = c(NA)) {
+                            x_unit = NULL, y_unit = NULL) {
 
   callModule(
     id = id, 
@@ -295,32 +295,34 @@ controls_server <- function(id,
         }
       })
       
-      data_table_t_unit <- reactive({
+      data_table_custom_units <- reactive({
         req(data_table())
         d <- data_table()
-        if (!is.null(t_unit)) {
-          time_related_column <- T_COLUMNS[T_COLUMNS %in% colnames(d)]
-          if(length(time_related_column) == 1) {
-          colname <- paste0(time_related_column, " (", t_unit, ")")
-          d[[colname]] <- d[[time_related_column]] / FACTORS[t_unit]
+        if (!is.null(x_unit)) {
+          colname <- paste0(names(x_unit), " (", x_unit, ")")
+          d[[colname]] <- d[[names(x_unit)]] / FACTORS[x_unit]
           # I cant remove t because this is propagated to the plotting module
           # it's ok, we can keep it and tell the users it also filters time, but using seconds
           # d$t <- NULL
-          } else if (length(time_related_column) > 1) {
-            message("More than one t related column detected. I will ignore both")
-          }
+        }
+        if (!is.null(y_unit)) {
+            colname <- paste0(names(y_unit), " (", y_unit, ")")
+            d[[colname]] <- d[[names(y_unit)]] / FACTORS[y_unit]
+            # I cant remove t because this is propagated to the plotting module
+            # it's ok, we can keep it and tell the users it also filters time, but using seconds
+            # d$t <- NULL
         }
         d
       })
       output_filter <- filter_data_server(
         id = "filter-data",
         data = reactive({
-          req(data_table_t_unit())
-          req(names(data_table_t_unit()))
+          req(data_table_custom_units())
+          req(names(data_table_custom_units()))
           if (isTRUE(input$disable_filters)) {
             return(NULL)
           } else {
-            data_table_t_unit()
+            data_table_custom_units()
           }
         }),
         name = data_name
@@ -333,7 +335,7 @@ controls_server <- function(id,
       )
       
       observeEvent(data_table(), {
-        # the output can stay the same, even if t_unit is modified
+        # the output can stay the same, even if x_unit is modified
         outputs$data <- data_table()
         outputs$code <- reactiveValues(expr = NULL, dplyr = NULL)
       })

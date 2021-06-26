@@ -147,12 +147,20 @@ ggcall <- function(data = NULL,
 
 #' @importFrom ggetho scale_x_hours scale_x_days
 #' @importFrom rlang env_poke
-extend_gg_call <- function(ggcall, t_unit=NA) {
-  if (!is.na(t_unit)) {
-    scale_x_timeunit <- list("hours" = ggetho::scale_x_hours, "days" = ggetho::scale_x_days)[[t_unit]]
+extend_gg_call <- function(ggcall, x_unit=NA, y_unit=NA) {
+  if (!is.na(x_unit)) {
+    message("Adjusting X axis")
+    scale_x_timeunit <- list("hours" = ggetho::scale_x_hours, "days" = ggetho::scale_x_days)[[x_unit]]
     scale_x <- expr(scale_x_timeunit())
     rlang::env_poke(env = parent.frame(), nm = "scale_x_timeunit", scale_x_timeunit)
     ggcall <- expr(!!ggcall + !!scale_x)
+  }
+  
+  if (!is.na(y_unit)) {
+    scale_y_timeunit <- list("hours" = ggetho::scale_x_hours, "days" = ggetho::scale_x_days)[[y_unit]]
+    scale_y <- expr(scale_y_timeunit())
+    rlang::env_poke(env = parent.frame(), nm = "scale_y_timeunit", scale_y_timeunit)
+    ggcall <- expr(!!ggcall + !!scale_y)
   }
   return(ggcall)
 }
