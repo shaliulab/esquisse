@@ -151,6 +151,8 @@ controls_ui <- function(id,
 
 #' @noRd
 FACTORS <- c("hours" = 3600, "days" = 3600 * 24)
+#' @noRd
+T_COLUMNS <- c("t", "period")
 
 #' Dropup buttons to hide chart's controls
 #'
@@ -296,12 +298,17 @@ controls_server <- function(id,
       data_table_t_unit <- reactive({
         req(data_table())
         d <- data_table()
-        if (!is.null(t_unit) & "t" %in% colnames(d)) {
-          colname <- paste0("t (", t_unit, ")")
-          d[[colname]] <- d$t / FACTORS[t_unit]
+        if (!is.null(t_unit)) {
+          time_related_column <- T_COLUMNS[T_COLUMNS %in% colnames(d)]
+          if(length(time_related_column) == 1) {
+          colname <- paste0(time_related_column, " (", t_unit, ")")
+          d[[colname]] <- d[[time_related_column]] / FACTORS[t_unit]
           # I cant remove t because this is propagated to the plotting module
           # it's ok, we can keep it and tell the users it also filters time, but using seconds
           # d$t <- NULL
+          } else if (length(time_related_column) > 1) {
+            message("More than one t related column detected. I will ignore both")
+          }
         }
         d
       })
