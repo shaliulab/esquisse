@@ -1,7 +1,7 @@
 #' List with all geom functions not provided in ggplot2
 #' but instead by ggetho (a ggplot2 extension)
 #' @noRd
-GGETHO_GEOMETRIES <- c("geom_pop_etho", "geom_ld_annotations")
+GGETHO_GEOMETRIES <- c("geom_pop_etho", "geom_ld_annotations", "geom_tile_etho")
 
 #' Potential geometries according to the data
 #'
@@ -109,6 +109,7 @@ potential_geoms_ref <- function() {
       "discrete",    "continuous",  "violin",    "0", 
       "discrete",    "continuous",  "bar",       "1",
       "continuous",  "continuous",  "pop_etho",  "1",
+      "continuous",  "continuous",  "tile_etho",  "0",
       "continuous",  "continuous",  "point",     "0",
       "continuous",  "continuous",  "line",      "0", 
       "continuous",  "continuous",  "step",      "0", 
