@@ -54,6 +54,8 @@ esquisse_server <- function(id,
                             default_aes = c("fill", "color", "size", "group", "facet"),
                             import_from = c("env", "file", "copypaste", "googlesheets"),
                             data_modal = TRUE,
+                            hardcoded_dragula = NULL,
+                            hardcoded_geom = NULL,
                             ...
                             ) {
   
@@ -69,6 +71,15 @@ esquisse_server <- function(id,
       observeEvent(input$settings, {
         showModal(modal_settings(aesthetics = input$aesthetics))
       })
+      
+      
+      geom <- reactive({
+        if (!is.null(hardcoded_geom)) {
+          hardcoded_geom
+        } else {
+          input$geom
+        }
+       })
       
       # Generate drag-and-drop input
       output$ui_aesthetics <- renderUI({
@@ -175,7 +186,7 @@ esquisse_server <- function(id,
       
       geom_possible <- reactiveValues(x = "auto")
       geom_controls <- reactiveValues(x = "auto")
-      observeEvent(list(input$dragvars$target, input$geom), {
+      observeEvent(list(input$dragvars$target, geom()), {
         geoms <- potential_geoms(
           data = data_chart$data,
           mapping = build_aes(
@@ -186,7 +197,7 @@ esquisse_server <- function(id,
         )
         geom_possible$x <- c("auto", geoms)
         
-        geom_controls$x <- select_geom_controls(input$geom, geoms)
+        geom_controls$x <- select_geom_controls(geom(), geoms)
         
         if (!is.null(input$dragvars$target$fill) | !is.null(input$dragvars$target$color)) {
           geom_controls$palette <- TRUE
@@ -199,7 +210,7 @@ esquisse_server <- function(id,
         geoms <- c(
           "auto", "line", "area", "bar", "histogram",
           "point", "boxplot", "violin", "density",
-          "tile", "sf", "pop_etho"
+          "tile", "sf", "pop_etho", "tile_etho"
         )
         updateDropInput(
           session = session,
@@ -209,13 +220,40 @@ esquisse_server <- function(id,
         )
       })
       
+      # do this only if
+      # * 1) the dragula inputs are empty (xvar, yvar, etc are empty)
+      # * 2) the dragula inputs are loaded (the column names already show)
+      # * 3) the data contains the passed hardcoded variables
+      automatic_fill <- reactive({
+        all(sapply(input$dragvars$target, is.null)) && !all("" == input$dragvars$source) && all(unlist(hardcoded_dragula$mapping) %in% colnames(data_chart$data))
+      })
+      
+      observeEvent(automatic_fill(), {
+        
+        if (! is.null(hardcoded_dragula) && automatic_fill()) {
+
+          # colnames_updated <- ! (all(globals$new_colnames %in% globals$old_colnames) & all(globals$old_colnames %in% globals$new_colnames))
+          colnames_updated <- TRUE
+
+            # if ("peak" %in% colnames(data_chart$data)) browser()
+
+            toggleDragula(
+              namespace = session$ns(""),
+              mapping = hardcoded_dragula$mapping,
+              geom = "auto"
+            )
+            updateShiny(
+              namespace = session$ns(""),
+              mapping = hardcoded_dragula$mapping,
+              geom = hardcoded_dragula$geom
+            )
+        }
+      }, ignoreInit = TRUE)
+      
       observeEvent(input$dragvars$target, {
         
         if(all(sapply(input$dragvars$target, is.null))) {
         
-          # colnames_updated <- ! (all(globals$new_colnames %in% globals$old_colnames) & all(globals$old_colnames %in% globals$new_colnames))
-          colnames_updated <- TRUE 
-          
           # if (colnames_updated & !is.null(globals$old_colnames) & all(unlist(globals$mapping) %in% colnames(data$data_chart))) {
           if (! all(is.null(unlist(globals$mapping))) & all(unlist(globals$mapping) %in% colnames(data_chart$data))) {
             
@@ -275,7 +313,7 @@ esquisse_server <- function(id,
         req(data_chart$data)
         req(controls_rv$data)
         req(controls_rv$inputs)
-        req(input$geom)
+        req(geom())
         
         aes_input <- make_aes(input$dragvars$target)
         
@@ -284,14 +322,14 @@ esquisse_server <- function(id,
         mapping <- build_aes(
           data = data_chart$data,
           .list = aes_input,
-          geom = input$geom
+          geom = geom()
         )
         
         geoms <- potential_geoms(
           data = data_chart$data,
           mapping = mapping
         )
-        req(input$geom %in% geoms)
+        req(geom() %in% geoms)
         
         data <- controls_rv$data
         
@@ -302,14 +340,14 @@ esquisse_server <- function(id,
           reverse = controls_rv$colors$reverse
         )
         
-        if (identical(input$geom, "auto")) {
+        if (identical(geom(), "auto")) {
           geom <- "blank"
         } else {
-          geom <- input$geom
+          geom <- geom()
         }
         
-        observeEvent(input$geom, {
-          if(input$geom == "pop_etho" & !globals$pop_etho_init) {
+        observeEvent(geom(), {
+          if(geom() == "pop_etho" & !globals$pop_etho_init) {
             # TODO
             # this works at the server side, but the UI stays showing the checkbox as false
             # the user can then activate it (with no effect) and disable it to reset it to normal
@@ -318,23 +356,23 @@ esquisse_server <- function(id,
           }
         })
         
-        geom_args <- match_geom_args(input$geom, controls_rv$inputs, mapping = mapping)
+        geom_args <- match_geom_args(geom(), controls_rv$inputs, mapping = mapping)
         
         if(isTRUE(controls_rv$ld_annotations$add)) {
           geom <- c(geom, "ld_annotations")
           geom_args <- c(
-            setNames(list(geom_args), input$geom),
+            setNames(list(geom_args), geom()),
             list(ld_annotations = controls_rv$ld_annotations$args)
           )
         }
-        if (isTRUE(controls_rv$smooth$add) & input$geom %in% c("point", "line")) {
+        if (isTRUE(controls_rv$smooth$add) & geom() %in% c("point", "line")) {
           geom <- c(geom, "smooth")
           geom_args <- c(
-            setNames(list(geom_args), input$geom),
+            setNames(list(geom_args), geom()),
             list(smooth = controls_rv$smooth$args)
           )
         }
-        if (!is.null(aes_input$ymin) & !is.null(aes_input$ymax) & input$geom %in% c("line")) {
+        if (!is.null(aes_input$ymin) & !is.null(aes_input$ymax) & geom() %in% c("line")) {
           geom <- c("ribbon", geom)
           mapping_ribbon <- aes_input[c("ymin", "ymax")]
           geom_args <- c(
@@ -342,7 +380,7 @@ esquisse_server <- function(id,
               mapping = expr(aes(!!!syms2(mapping_ribbon))), 
               fill = controls_rv$inputs$color_ribbon
             )),
-            setNames(list(geom_args), input$geom)
+            setNames(list(geom_args), geom())
           )
           mapping$ymin <- NULL
           mapping$ymax <- NULL
