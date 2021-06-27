@@ -10,7 +10,7 @@ function filter_namespace(arr, ns) {
   // keep only stuff with an id
   arr = arr.filter(t => t.id != undefined);
   // keep only stuff with matching id
-  arr = arr.filter(t => t.id.indexOf('sleepPlot-') > -1);   
+  arr = arr.filter(t => t.id.indexOf(ns) > -1);   
   return arr;
 }
 
