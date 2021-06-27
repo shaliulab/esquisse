@@ -147,8 +147,8 @@ ggcall <- function(data = NULL,
 
 #' @importFrom ggetho scale_x_hours scale_x_days
 #' @importFrom rlang env_poke
-extend_gg_call <- function(ggcall, x_unit=NA, y_unit=NA) {
-  if (!is.na(x_unit)) {
+extend_gg_call <- function(ggcall, x_unit=NULL, y_unit=NULL, z_aes=NULL) {
+  if (!is.null(x_unit)) {
     message("Adjusting X axis")
     scale_x_timeunit <- list("hours" = ggetho::scale_x_hours, "days" = ggetho::scale_x_days)[[x_unit]]
     scale_x <- expr(scale_x_timeunit())
@@ -156,11 +156,29 @@ extend_gg_call <- function(ggcall, x_unit=NA, y_unit=NA) {
     ggcall <- expr(!!ggcall + !!scale_x)
   }
   
-  if (!is.na(y_unit)) {
-    scale_y_timeunit <- list("hours" = ggetho::scale_x_hours, "days" = ggetho::scale_x_days)[[y_unit]]
-    scale_y <- expr(scale_y_timeunit())
+  # TODO This is a mess
+  # It only works because everytie z_aes is assigned and is set to poer
+  # I want to have the log transform on the y axis
+  # But it's very arbitrary. I should have a way to clearly state it from the input to esquisse_server
+  # However, it works for now :)
+  if (!is.null(y_unit)) {
+    scale_y_timeunit <- list("hours" = ggetho::scale_y_hours, "days" = ggetho::scale_y_days)[[y_unit]]
+    if(!is.null(z_aes) && z_aes == "power") {
+      y_log_transform <- TRUE
+    } else {
+      y_log_transform <- F
+    }
+    scale_y <- expr(scale_y_timeunit(log=y_log_transform))
     rlang::env_poke(env = parent.frame(), nm = "scale_y_timeunit", scale_y_timeunit)
+    rlang::env_poke(env = parent.frame(), nm = "y_log_transform", y_log_transform)
     ggcall <- expr(!!ggcall + !!scale_y)
+  }
+  
+  if (!is.null(z_aes)) {
+    z_expr <- expr(ggplot2::aes_string(z = z_aes))
+    rlang::env_poke(env = parent.frame(), nm = "z_aes", z_aes)
+    ggcall <- expr(!!ggcall + !!z_expr)
+    print(ggcall)
   }
   return(ggcall)
 }
