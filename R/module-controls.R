@@ -188,7 +188,7 @@ controls_server <- function(id,
                             use_facet = reactive(FALSE),
                             use_transX = reactive(FALSE),
                             use_transY = reactive(FALSE),
-                            x_unit = NULL, y_unit = NULL) {
+                            x_unit = NULL, y_unit = NULL, ...) {
 
   callModule(
     id = id, 
