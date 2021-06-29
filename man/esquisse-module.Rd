@@ -21,6 +21,8 @@ esquisse_server(
   default_aes = c("fill", "color", "size", "group", "facet"),
   import_from = c("env", "file", "copypaste", "googlesheets"),
   data_modal = TRUE,
+  hardcoded_dragula = NULL,
+  hardcoded_geom = NULL,
   ...
 )
 

@@ -91,7 +91,7 @@ potential_geoms <- function(data, mapping, auto = FALSE) {
 #' @importFrom ggplot2 geom_histogram geom_density geom_bar geom_sf 
 #' geom_boxplot geom_bar geom_point geom_line geom_tile geom_violin
 #' geom_area geom_smooth geom_col
-#' @importFrom ggetho geom_pop_etho geom_ld_annotations
+#' @importFrom ggetho geom_pop_etho geom_ld_annotations geom_tile_etho
 potential_geoms_ref <- function() {
   x <- matrix(
     data = c(
