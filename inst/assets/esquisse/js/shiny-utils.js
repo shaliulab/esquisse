@@ -38,7 +38,7 @@ function filter_namespace_spans(arr, ns) {
 // move badge 17 to target 1
 // document.getElementById(targets[1].id).appendChild(badges[17]);
 
-aesthetics = ["xvar", "yvar", "fill", "color", "size", "group", "facet"];
+aesthetics = ["xvar", "yvar", "fill", "color", "size", "group", "facet", "facet_col", "facet_row", "linetype"];
 // aesthetics.findIndex(function(e) {return e == "fill";}) // returns 2
 
 function select_target(targets, aes) {
