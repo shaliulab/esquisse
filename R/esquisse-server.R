@@ -309,6 +309,18 @@ esquisse_server <- function(id,
       )
       
       
+      # Defined once (it used to be created inside the plot rendering, adding a new
+      # observer, and an extra re-render, every time the plot changed)
+      observeEvent(geom(), {
+        if(geom() == "pop_etho" & !globals$pop_etho_init) {
+          # TODO
+          # this works at the server side, but the UI stays showing the checkbox as false
+          # the user can then activate it (with no effect) and disable it to reset it to normal
+          controls_rv$ld_annotations$add <- T
+          globals$pop_etho_init <- T
+        }
+      })
+
       render_ggplot("plooooooot", {
         req(data_chart$data)
         req(controls_rv$data)
@@ -345,16 +357,6 @@ esquisse_server <- function(id,
         } else {
           geom <- geom()
         }
-        
-        observeEvent(geom(), {
-          if(geom() == "pop_etho" & !globals$pop_etho_init) {
-            # TODO
-            # this works at the server side, but the UI stays showing the checkbox as false
-            # the user can then activate it (with no effect) and disable it to reset it to normal
-            controls_rv$ld_annotations$add <- T
-            globals$pop_etho_init <- T
-          }
-        })
         
         geom_args <- match_geom_args(geom(), controls_rv$inputs, mapping = mapping)
         
