@@ -29,7 +29,8 @@ Imports:
     ggplot2 (>= 3.0.0),
     scales,
     rlang (>= 0.3.1),
-    grDevices
+    grDevices,
+    ggetho (>= 0.3.5)
 Suggests: 
     officer,
     rvg,
@@ -41,4 +42,4 @@ Suggests:
     hrbrthemes
 VignetteBuilder: knitr
 Remotes:
-    shaliulab/ggetho
+    shaliulab/ggetho@c593ba2a316e3a48624ea0e8a08b87eb2ec63610
