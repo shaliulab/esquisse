@@ -112,7 +112,10 @@ controls_ui <- function(id,
       },
       if (isTRUE("filters" %in% controls)) {
         dropdown_(
-          filter_data_ui(id = ns("filter-data")),
+          tags$div(
+            actionButton(ns("clear_filters"), "Clear all filters", icon = icon("times"), class = "btn-sm btn-block"),
+            filter_data_ui(id = ns("filter-data"))
+          ),
           inputId = ns("controls-filters"),
           class = "esquisse-controls-filters scroll",
           style = "default",
@@ -317,6 +320,9 @@ controls_server <- function(id,
       output_filter <- filter_data_server(
         id = "filter-data",
         data = reactive({
+          # the filters are rebuilt (with every value selected) when the data changes:
+          # depending on the button clears them all
+          input$clear_filters
           req(data_table_custom_units())
           req(names(data_table_custom_units()))
           if (isTRUE(input$disable_filters)) {
