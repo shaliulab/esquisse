@@ -771,7 +771,7 @@ controls_appearance <- function(ns) {
       inputId = ns("theme"),
       label = "Theme:",
       choices = themes,
-      selected = getOption("esquisse.default.theme", default = "theme_bw"),
+      selected = default_theme(),
       options = list(size = 10, container = "body"),
       width = "100%"
     ),

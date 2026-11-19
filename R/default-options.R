@@ -96,9 +96,12 @@ default_themes <- function() {
                "void")
   ggplot2 <- setNames(as.list(paste0("theme_", ggplot2)), ggplot2)
   
-  themes <- list(
-    ggplot2 = ggplot2
-  )
+  themes <- list()
+  # GraphPad Prism look, the default theme (see default_theme())
+  if (requireNamespace("ggprism", quietly = TRUE)) {
+    themes$ggprism <- list(prism = "ggprism::theme_prism")
+  }
+  themes$ggplot2 <- ggplot2
   if (requireNamespace("ggthemes", quietly = TRUE)) {
     ggthemes <- c(
       "base", "calc", "economist", "economist_white",
@@ -120,6 +123,14 @@ default_themes <- function() {
   }
   
   return(themes)
+}
+
+# Theme selected when the app starts: ggprism's theme_prism when installed
+default_theme <- function() {
+  getOption(
+    "esquisse.default.theme",
+    default = if (requireNamespace("ggprism", quietly = TRUE)) "ggprism::theme_prism" else "theme_bw"
+  )
 }
 
 check_theme_exist <- function(x, package = "ggplot2") {
