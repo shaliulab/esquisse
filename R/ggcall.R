@@ -183,6 +183,26 @@ extend_gg_call <- function(ggcall, x_unit=NULL, y_unit=NULL, z_aes=NULL) {
   return(ggcall)
 }
 
+#' Multiply the variable on the y axis by a factor and give the axis a title
+#'
+#' @param y_rescale function returning NULL (nothing to do) or
+#'  list(var = name of the y variable, factor = number, label = y axis title).
+#'  Nothing is done unless `var` is the variable on the y axis.
+#'  A y axis title typed by the user in the labels controls is kept.
+#' @noRd
+rescale_y_call <- function(ggcall, mapping, y_rescale, labs = list()) {
+  if (!is.function(y_rescale)) return(ggcall)
+  rs <- y_rescale()
+  if (is.null(rs) || is.null(mapping$y)) return(ggcall)
+  y <- tryCatch(as_name(mapping$y), error = function(e) NULL)
+  if (!identical(y, rs$var) || !is.numeric(rs$factor) || is.na(rs$factor)) return(ggcall)
+  ggcall <- expr(!!ggcall + aes(y = !!sym(y) * !!rs$factor))
+  # the aes above replaces the axis title: set it again, the user's first
+  label <- if (!is.null(labs$y) && !identical(labs$y, "")) labs$y else rs$label
+  if (!is.null(label)) ggcall <- expr(!!ggcall + labs(y = !!label))
+  ggcall
+}
+
 syms2 <- function(x) {
   lapply(
     X = x,

@@ -56,6 +56,7 @@ esquisse_server <- function(id,
                             data_modal = TRUE,
                             hardcoded_dragula = NULL,
                             hardcoded_geom = NULL,
+                            y_rescale = NULL,
                             ...
                             ) {
   
@@ -432,6 +433,7 @@ esquisse_server <- function(id,
         )
         
         gg_call <- extend_gg_call(gg_call, ...)
+        gg_call <- rescale_y_call(gg_call, mapping, y_rescale, controls_rv$labs)
  
         ggplotCall$code <- deparse2(gg_call)
         ggplotCall$call <- gg_call
