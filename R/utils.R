@@ -117,6 +117,22 @@ search_obj <- function(what = "data.frame", env = globalenv()) {
 }
 
 
+#' Order the variables shown as badges: first the categorical ones (discrete and id),
+#' then the numerical ones (continuous), then dates/times and any other type,
+#' each group alphabetically (ignoring case)
+#'
+#' @param data data.frame
+#' @param col_names names of the columns of data to order
+#'
+#' @noRd
+sort_col_names <- function(data, col_names) {
+  if (length(col_names) == 0) return(col_names)
+  types <- vapply(col_names, function(col) col_type(data[[col]]), character(1), USE.NAMES = FALSE)
+  group <- match(types, c("discrete", "id", "continuous", "time"), nomatch = 5L)
+  group[group == 2L] <- 1L
+  col_names[order(group, tolower(col_names), col_names)]
+}
+
 #' Create badge according to data type
 #'
 #' It uses conventions defined in the package, variable type are retrieve with \code{\link{col_type}}.

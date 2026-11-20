@@ -13,7 +13,7 @@ updateDragulaInputData <- function(data, geom_possible, session) {
       geom_possible$x <- c("sf", geom_possible$x)
     }
     
-    var_choices <- get_col_names(data)
+    var_choices <- sort_col_names(data, get_col_names(data))
     
     updateDragulaInput(
       session = session,
@@ -95,7 +95,7 @@ esquisse_server <- function(id,
         }
         data <- isolate(data_chart$data)
         if (!is.null(data)) {
-          var_choices <- get_col_names(data)
+          var_choices <- sort_col_names(data, get_col_names(data))
           dragulaInput(
             inputId = ns("dragvars"),
             sourceLabel = "Variables",
