@@ -183,20 +183,27 @@ extend_gg_call <- function(ggcall, x_unit=NULL, y_unit=NULL, z_aes=NULL) {
   return(ggcall)
 }
 
-#' Multiply the variable on the y axis by a factor and give the axis a title
+#' Rescale the variable on the y axis and give the axis a title
 #'
 #' @param y_rescale function returning NULL (nothing to do) or
-#'  list(var = name of the y variable, factor = number, label = y axis title).
+#'  list(var = name of the y variable, factor = number, divisor = number, label = y axis title).
+#'  The y variable is multiplied by `factor` and divided by `divisor` (each optional, default 1).
+#'  The function can take one argument: it then gets the data plotted (after the filters).
 #'  Nothing is done unless `var` is the variable on the y axis.
 #'  A y axis title typed by the user in the labels controls is kept.
+#' @param data the data plotted
 #' @noRd
-rescale_y_call <- function(ggcall, mapping, y_rescale, labs = list()) {
-  if (!is.function(y_rescale)) return(ggcall)
-  rs <- y_rescale()
-  if (is.null(rs) || is.null(mapping$y)) return(ggcall)
+rescale_y_call <- function(ggcall, mapping, y_rescale, labs = list(), data = NULL) {
+  if (!is.function(y_rescale) || is.null(mapping$y)) return(ggcall)
   y <- tryCatch(as_name(mapping$y), error = function(e) NULL)
-  if (!identical(y, rs$var) || !is.numeric(rs$factor) || is.na(rs$factor)) return(ggcall)
-  ggcall <- expr(!!ggcall + aes(y = !!sym(y) * !!rs$factor))
+  if (is.null(y)) return(ggcall)
+  rs <- if (length(formals(y_rescale)) > 0) y_rescale(data) else y_rescale()
+  if (is.null(rs) || !identical(y, rs$var)) return(ggcall)
+  valid <- function(x) is.numeric(x) && length(x) == 1 && !is.na(x) && x != 0
+  y_expr <- sym(y)
+  if (valid(rs$factor) && rs$factor != 1) y_expr <- expr(!!y_expr * !!rs$factor)
+  if (valid(rs$divisor) && rs$divisor != 1) y_expr <- expr(!!y_expr / !!rs$divisor)
+  if (!identical(y_expr, sym(y))) ggcall <- expr(!!ggcall + aes(y = !!y_expr))
   # the aes above replaces the axis title: set it again, the user's first
   label <- if (!is.null(labs$y) && !identical(labs$y, "")) labs$y else rs$label
   if (!is.null(label)) ggcall <- expr(!!ggcall + labs(y = !!label))
